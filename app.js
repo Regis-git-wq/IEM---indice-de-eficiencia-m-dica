@@ -64,7 +64,6 @@
 
   function atualizarPix() {
     const payload = window.gerarPix({ ...cfg.pix, valor: $("valor").value });
-    $("copiaCola").value = payload;
     const qr = qrcode(0, "M");
     qr.addData(payload);
     qr.make();
@@ -104,7 +103,6 @@
       mostrar();
     }
   }
-  $("btnCopiaCola").addEventListener("click", () => copiar($("copiaCola").value));
   $("btnChave").addEventListener("click", () => copiar($("chave").value));
 
   atualizarPix();
