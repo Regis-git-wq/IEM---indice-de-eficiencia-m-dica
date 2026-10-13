@@ -119,3 +119,23 @@ textarea { width: 100%; resize: vertical; }
   .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
   .content { padding: 16px; }
 }
+
+.sidebar { display: flex; flex-direction: column; }
+.account { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); display: grid; gap: 6px; }
+.account p { margin: 0; }
+.account-name { font-weight: 600; }
+.account .link { justify-self: start; padding-left: 0; }
+button.full { width: 100%; }
+.sync-line { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+.sync-line .link { padding: 0 4px; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; flex: none; }
+.sync-line.syncing .sync-dot { background: var(--primary); animation: pulse 1s infinite; }
+.sync-line.offline .sync-dot { background: var(--muted); }
+.sync-line.error .sync-dot { background: var(--danger); }
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgb(0 0 0 / 0.45);
+  display: grid; place-items: center; padding: 16px; z-index: 10;
+}
+.modal { width: min(380px, 100%); display: grid; gap: 10px; margin: 0; }
+.modal h3 { margin: 0; }
+.modal p { margin: 0; }

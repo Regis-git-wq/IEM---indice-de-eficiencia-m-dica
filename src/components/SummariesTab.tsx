@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import Markdown from "react-markdown";
+import { useAccount } from "../account";
 import { canSummarize, requestSummary } from "../api";
 import {
   deleteItem,
   listBySubject,
   newId,
+  onDataChange,
   saveItem,
   type Material,
   type Subject,
@@ -29,6 +31,7 @@ export function SummariesTab({ subject }: { subject: Subject }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const { user } = useAccount();
 
   const refresh = async () => {
     const [s, m] = await Promise.all([listBySubject("summaries", subject.id), listBySubject("materials", subject.id)]);
@@ -41,6 +44,7 @@ export function SummariesTab({ subject }: { subject: Subject }) {
     setOpenId(null);
     setError(null);
     void refresh();
+    return onDataChange(() => void refresh());
   }, [subject.id]);
 
   const toggle = (id: string) =>
@@ -58,7 +62,7 @@ export function SummariesTab({ subject }: { subject: Subject }) {
     setError(null);
     try {
       const content = await requestSummary({ materials: chosen, style, subject: subject.name, instructions });
-      const summary: Summary = {
+      const summary = {
         id: newId(),
         subjectId: subject.id,
         title: `${STYLES.find((s) => s.id === style)?.label} — ${chosen.map((m) => m.name).join(", ")}`,
@@ -71,7 +75,6 @@ export function SummariesTab({ subject }: { subject: Subject }) {
       setOpenId(summary.id);
       setSelected(new Set());
       setInstructions("");
-      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -82,14 +85,15 @@ export function SummariesTab({ subject }: { subject: Subject }) {
   const remove = async (s: Summary) => {
     if (!confirm("Excluir este resumo?")) return;
     await deleteItem("summaries", s.id);
-    await refresh();
   };
 
   return (
     <section>
       <div className="card">
         <h3>Gerar novo resumo</h3>
-        {materials.length === 0 ? (
+        {!user ? (
+          <p className="muted">Entre na sua conta (barra lateral) para gerar resumos com IA.</p>
+        ) : materials.length === 0 ? (
           <p className="muted">Anexe um PDF, imagem ou arquivo de texto na aba Materiais para poder resumir.</p>
         ) : (
           <>

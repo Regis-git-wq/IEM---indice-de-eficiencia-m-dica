@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { canSummarize } from "../api";
-import { deleteItem, listBySubject, newId, saveItem, type Material, type Subject } from "../db";
+import { deleteItem, listBySubject, newId, onDataChange, saveItem, type Material, type Subject } from "../db";
+import { getBlob } from "../sync";
 import { downloadBlob, formatBytes, formatDate } from "../format";
 
 export function MaterialsTab({ subject }: { subject: Subject }) {
@@ -11,6 +12,7 @@ export function MaterialsTab({ subject }: { subject: Subject }) {
 
   useEffect(() => {
     void refresh();
+    return onDataChange(() => void refresh());
   }, [subject.id]);
 
   const addFiles = async (files: FileList | null) => {
@@ -26,19 +28,29 @@ export function MaterialsTab({ subject }: { subject: Subject }) {
         createdAt: Date.now(),
       });
     }
-    await refresh();
   };
 
   const remove = async (m: Material) => {
     if (!confirm(`Excluir "${m.name}"?`)) return;
     await deleteItem("materials", m.id);
-    await refresh();
+  };
+
+  const withBlob = async (m: Material, use: (blob: Blob) => void) => {
+    try {
+      use(await getBlob("materials", m));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
   };
 
   const open = (m: Material) => {
-    const url = URL.createObjectURL(m.blob);
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    // Abre a aba já no clique (antes do download) para o navegador não bloquear como pop-up.
+    const tab = window.open("", "_blank");
+    void withBlob(m, (blob) => {
+      const url = URL.createObjectURL(blob);
+      if (tab) tab.location.href = url;
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    });
   };
 
   return (
@@ -71,13 +83,14 @@ export function MaterialsTab({ subject }: { subject: Subject }) {
                 <div className="title">{m.name}</div>
                 <div className="muted small">
                   {formatBytes(m.size)} · {formatDate(m.createdAt)}
+                  {!m.blob && " · na nuvem"}
                   {!canSummarize(m) && " · não pode ser resumido (use PDF, imagem ou texto)"}
                 </div>
               </div>
               <button className="link" onClick={() => open(m)}>
                 Abrir
               </button>
-              <button className="link" onClick={() => downloadBlob(m.blob, m.name)}>
+              <button className="link" onClick={() => void withBlob(m, (blob) => downloadBlob(blob, m.name))}>
                 Baixar
               </button>
               <button className="link danger" onClick={() => remove(m)}>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { deleteSubject, listSubjects, newId, saveSubject, type Subject } from "./db";
+import { deleteSubject, listSubjects, newId, onDataChange, saveSubject, type Subject } from "./db";
+import { AccountPanel } from "./components/AccountPanel";
 import { MaterialsTab } from "./components/MaterialsTab";
 import { SummariesTab } from "./components/SummariesTab";
 import { RecordingsTab } from "./components/RecordingsTab";
@@ -27,23 +28,22 @@ export default function App() {
 
   useEffect(() => {
     void refresh();
+    return onDataChange(() => void refresh());
   }, []);
 
   const addSubject = async (e: React.FormEvent) => {
     e.preventDefault();
     const name = newName.trim();
     if (!name) return;
-    const subject: Subject = { id: newId(), name, color: COLORS[subjects.length % COLORS.length], createdAt: Date.now() };
-    await saveSubject(subject);
-    setNewName("");
+    const subject = { id: newId(), name, color: COLORS[subjects.length % COLORS.length], createdAt: Date.now() };
     setSelectedId(subject.id);
-    await refresh();
+    setNewName("");
+    await saveSubject(subject);
   };
 
   const removeSubject = async (s: Subject) => {
     if (!confirm(`Excluir "${s.name}" com todos os materiais, resumos e áudios?`)) return;
     await deleteSubject(s.id);
-    await refresh();
   };
 
   const selected = subjects.find((s) => s.id === selectedId) ?? null;
@@ -78,6 +78,7 @@ export default function App() {
             +
           </button>
         </form>
+        <AccountPanel />
       </aside>
 
       <main className="content">

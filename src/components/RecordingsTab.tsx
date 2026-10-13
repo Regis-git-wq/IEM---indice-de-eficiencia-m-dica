@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { deleteItem, listBySubject, newId, saveItem, type Recording, type Subject } from "../db";
+import { deleteItem, listBySubject, newId, onDataChange, saveItem, type Recording, type Subject } from "../db";
+import { getBlob } from "../sync";
 import { downloadBlob, formatDate, formatDuration } from "../format";
 
 type RecorderState = "idle" | "recording" | "paused";
@@ -52,6 +53,7 @@ export function RecordingsTab({ subject }: { subject: Subject }) {
 
   useEffect(() => {
     void refresh();
+    return onDataChange(() => void refresh());
   }, [subject.id]);
 
   // Interrompe a gravação se o usuário trocar de disciplina ou sair da aba.
@@ -109,7 +111,6 @@ export function RecordingsTab({ subject }: { subject: Subject }) {
         notes: "",
         createdAt: Date.now(),
       });
-      await refresh();
     };
 
     // Gera pedaços a cada 10s para não perder tudo se a aba travar no meio da aula.
@@ -145,7 +146,6 @@ export function RecordingsTab({ subject }: { subject: Subject }) {
         createdAt: Date.now(),
       });
     }
-    await refresh();
   };
 
   const filtered = useMemo(() => {
@@ -205,7 +205,7 @@ export function RecordingsTab({ subject }: { subject: Subject }) {
       ) : (
         <ul className="list">
           {filtered.map((r) => (
-            <RecordingItem key={r.id} recording={r} onChange={refresh} />
+            <RecordingItem key={r.id} recording={r} />
           ))}
         </ul>
       )}
@@ -213,22 +213,42 @@ export function RecordingsTab({ subject }: { subject: Subject }) {
   );
 }
 
-function RecordingItem({ recording, onChange }: { recording: Recording; onChange: () => Promise<void> }) {
-  const url = useMemo(() => URL.createObjectURL(recording.blob), [recording.blob]);
-  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+function RecordingItem({ recording }: { recording: Recording }) {
+  // Depende só de "tem arquivo local?": cada sincronização relê o blob do banco como um novo objeto,
+  // e trocar o src no meio da reprodução reiniciaria o áudio.
+  const hasLocalBlob = !!recording.blob;
+  const [url, setUrl] = useState<string>();
+  useEffect(() => {
+    if (!recording.blob) {
+      // Áudio que veio de outro aparelho toca direto do servidor, sem precisar baixar tudo antes.
+      setUrl(`/api/blobs/${recording.id}`);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(recording.blob);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [hasLocalBlob, recording.id]);
 
   const [title, setTitle] = useState(recording.title);
   const [notes, setNotes] = useState(recording.notes);
+  // Atualiza os campos quando a edição chega de outro aparelho.
+  useEffect(() => setTitle(recording.title), [recording.title]);
+  useEffect(() => setNotes(recording.notes), [recording.notes]);
 
-  const persist = async (patch: Partial<Recording>) => {
-    await saveItem("recordings", { ...recording, ...patch });
-    await onChange();
-  };
+  const persist = (patch: Partial<Recording>) => saveItem("recordings", { ...recording, ...patch });
 
   const remove = async () => {
     if (!confirm(`Excluir "${recording.title}"?`)) return;
     await deleteItem("recordings", recording.id);
-    await onChange();
+  };
+
+  const download = async () => {
+    try {
+      const blob = await getBlob("recordings", recording);
+      downloadBlob(blob, `${recording.title}.${extensionFor(recording.mimeType)}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
   };
 
   return (
@@ -256,7 +276,7 @@ function RecordingItem({ recording, onChange }: { recording: Recording; onChange
       <div className="row end">
         <button
           className="link"
-          onClick={() => downloadBlob(recording.blob, `${recording.title}.${extensionFor(recording.mimeType)}`)}
+          onClick={() => void download()}
         >
           Baixar
         </button>

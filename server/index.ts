@@ -2,13 +2,18 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Anthropic from "@anthropic-ai/sdk";
 import express from "express";
+import { authRouter, loadUser, requireUser } from "./auth.js";
 import { RefusalError, summarize, UnsupportedFileError, type SummarizeRequest } from "./summarize.js";
+import { syncRouter } from "./sync.js";
 
 const app = express();
-// PDFs chegam em base64; o limite acompanha o máximo de 32 MB por requisição da API.
-app.use(express.json({ limit: "45mb" }));
+app.set("trust proxy", 1);
+app.use("/api", loadUser);
+app.use("/api/auth", express.json(), authRouter);
+app.use("/api", requireUser, syncRouter);
 
-app.post("/api/summarize", async (req, res) => {
+// PDFs chegam em base64; o limite acompanha o máximo de 32 MB por requisição da API.
+app.post("/api/summarize", requireUser, express.json({ limit: "45mb" }), async (req, res) => {
   const body = req.body as SummarizeRequest;
   if (!Array.isArray(body?.files) || body.files.length === 0) {
     res.status(400).json({ error: "Envie pelo menos um material para resumir." });

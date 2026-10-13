@@ -1,4 +1,5 @@
 import type { Material, SummaryStyle } from "./db";
+import { getBlob } from "./sync";
 
 const TEXT_TYPES = ["text/plain", "text/markdown", "text/csv"];
 const TEXT_EXTENSIONS = [".txt", ".md", ".csv"];
@@ -30,11 +31,12 @@ export async function requestSummary(opts: {
   instructions: string;
 }): Promise<string> {
   const files = await Promise.all(
-    opts.materials.map(async (m) =>
-      isTextMaterial(m)
-        ? { name: m.name, mimeType: m.mimeType, data: await m.blob.text(), encoding: "text" as const }
-        : { name: m.name, mimeType: m.mimeType, data: await blobToBase64(m.blob), encoding: "base64" as const },
-    ),
+    opts.materials.map(async (m) => {
+      const blob = await getBlob("materials", m);
+      return isTextMaterial(m)
+        ? { name: m.name, mimeType: m.mimeType, data: await blob.text(), encoding: "text" as const }
+        : { name: m.name, mimeType: m.mimeType, data: await blobToBase64(blob), encoding: "base64" as const };
+    }),
   );
 
   const res = await fetch("/api/summarize", {
