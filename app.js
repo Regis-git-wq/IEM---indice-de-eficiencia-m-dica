@@ -50,6 +50,7 @@
   // ---- Pix ----
   $("chave").value = cfg.pix.chave;
   $("recebedor").textContent = cfg.titular || cfg.pix.nomeRecebedor;
+  $("avisoTitular").textContent = cfg.titular || cfg.pix.nomeRecebedor;
 
   // ---- Transferência bancária ----
   if (cfg.banco) {

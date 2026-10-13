@@ -90,3 +90,15 @@ footer { text-align: center; color: var(--suave); font-size: .9rem; margin-top: 
 .banco { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; }
 .banco dt { color: var(--suave); }
 .banco dd { margin: 0; font-weight: 600; }
+.aviso {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff6db;
+  color: #5c4500;
+  border: 1px solid #f0d67a;
+  font-size: .9rem;
+}
+@media (prefers-color-scheme: dark) {
+  .aviso { background: #3a3014; color: #f5e3a8; border-color: #6b5a22; }
+}

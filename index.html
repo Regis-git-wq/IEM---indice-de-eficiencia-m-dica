@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <title>Vaquinha</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -45,6 +47,10 @@
         Valor (opcional)
         <input id="valor" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Deixe vazio para escolher no app do banco">
       </label>
+      <p class="aviso" role="note">
+        🔒 Antes de confirmar o Pix, verifique no app do seu banco se o recebedor é
+        <strong id="avisoTitular"></strong>. Se aparecer outro nome, não pague.
+      </p>
       <div id="qrcode" class="qrcode" aria-label="QR Code Pix"></div>
       <p class="rotulo">Pix Copia e Cola</p>
       <div class="copiar">
