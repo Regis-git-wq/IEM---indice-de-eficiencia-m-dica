@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vaquinha</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <img id="imagem" alt="" hidden>
+      <h1 id="titulo">Vaquinha</h1>
+      <p id="descricao"></p>
+    </header>
+
+    <section class="card progresso">
+      <div class="valores">
+        <div>
+          <span class="rotulo">Arrecadado</span>
+          <strong id="total">R$ 0,00</strong>
+        </div>
+        <div class="direita">
+          <span class="rotulo">Meta</span>
+          <strong id="meta">R$ 0,00</strong>
+        </div>
+      </div>
+      <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="barra">
+        <div class="preenchido" id="preenchido"></div>
+      </div>
+      <p class="info"><span id="percentual">0%</span> da meta · <span id="qtd">0</span> contribuições</p>
+      <p class="atualizado" id="atualizado"></p>
+    </section>
+
+    <section class="card pix">
+      <h2>Contribua via Pix</h2>
+      <div class="valores-rapidos" id="valoresRapidos">
+        <button data-valor="10">R$ 10</button>
+        <button data-valor="25">R$ 25</button>
+        <button data-valor="50">R$ 50</button>
+        <button data-valor="100">R$ 100</button>
+        <button data-valor="" class="ativo">Outro valor</button>
+      </div>
+      <label class="campo-valor">
+        Valor (opcional)
+        <input id="valor" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Deixe vazio para escolher no app do banco">
+      </label>
+      <div id="qrcode" class="qrcode" aria-label="QR Code Pix"></div>
+      <p class="rotulo">Pix Copia e Cola</p>
+      <div class="copiar">
+        <input id="copiaCola" readonly>
+        <button id="btnCopiaCola">Copiar</button>
+      </div>
+      <p class="rotulo">Chave Pix</p>
+      <div class="copiar">
+        <input id="chave" readonly>
+        <button id="btnChave">Copiar</button>
+      </div>
+      <p class="recebedor">Recebedor: <strong id="recebedor"></strong></p>
+    </section>
+
+    <section class="card" id="secaoDoadores" hidden>
+      <h2>Quem já ajudou 💛</h2>
+      <ul id="doadores" class="doadores"></ul>
+    </section>
+
+    <footer>Compartilhe esta página com quem puder ajudar!</footer>
+  </main>
+  <div id="toast" class="toast" hidden>Copiado!</div>
+
+  <script src="qrcode.js"></script>
+  <script src="config.js"></script>
+  <script src="pix.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
