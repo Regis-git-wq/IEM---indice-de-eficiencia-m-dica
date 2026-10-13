@@ -24,7 +24,8 @@
   window.gerarPix = function ({ chave, nomeRecebedor, cidade, identificador, valor }) {
     const nome = semAcentos(nomeRecebedor).slice(0, 25);
     const cid = semAcentos(cidade).slice(0, 15);
-    const txid = (semAcentos(identificador).replace(/[^A-Za-z0-9]/g, "") || "***").slice(0, 25);
+    const id = semAcentos(identificador).replace(/[^A-Za-z0-9]/g, "").slice(0, 25);
+    const txid = id || "***";
 
     let payload =
       campo("00", "01") +

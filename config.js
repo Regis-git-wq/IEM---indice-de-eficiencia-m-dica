@@ -20,7 +20,7 @@ window.VAQUINHA = {
     chave: "paulagalvaofortes@hotmail.com",
     nomeRecebedor: "PAULA FERNANDA G A FORTES", // usado no QR Code (máx. 25 caracteres)
     cidade: "BRASIL", // usado no QR Code (máx. 15 caracteres); pode trocar pela sua cidade
-    identificador: "VAQUINHA",
+    identificador: "***", // padrão do Banco Central para Pix sem identificador; não altere
   },
   titular: "Paula Fernanda Galvão Andrade Fortes", // nome completo mostrado no site
 
