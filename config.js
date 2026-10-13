@@ -2,28 +2,41 @@
 //  CONFIGURAÇÃO DA VAQUINHA — edite apenas este arquivo
 // =====================================================================
 window.VAQUINHA = {
-  titulo: "Ajude nossa causa",
+  titulo: "Ajude a Paula a realizar um sonho",
   descricao:
-    "Conte aqui a história da vaquinha: para que serve o dinheiro, quem será ajudado " +
-    "e por que cada contribuição faz diferença. Obrigado por apoiar! 💛",
+    "Amigos(as), estou fazendo uma vaquinha on-line.\n" +
+    "Todos que me conhecem sabem que uso uma prótese (perna direita) há 20 anos.\n\n" +
+    "Nesse tempo, realizei muitas coisas que pareciam impossíveis, mas tem outras que ainda são um sonho. " +
+    "Coisas simples, como: entrar no mar, tomar um banho de chuva, fazer uma trilha, entrar numa cachoeira, " +
+    "um simples banho de mangueira, pegar uma bicicleta e sair pedalando... Hoje não consigo fazer isso como antes.\n\n" +
+    "Bemmm... já lançaram no mercado uma prótese que pode me ajudar a voltar a viver esses momentos, " +
+    "e ela custa R$ 280.000,00. Por esse motivo criei essa vaquinha.\n\n" +
+    "Se puder doar, qualquer valor já ajuda. Se não puder, COMPARTILHE. " +
+    "Me ajudem a chegar mais perto do meu sonho. 💛",
   imagem: "", // opcional: URL ou caminho de uma imagem (ex.: "foto.jpg")
 
   // ---- Dados do Pix ----
   pix: {
-    chave: "seuemail@exemplo.com", // CPF, CNPJ, e-mail, telefone (+5511999999999) ou chave aleatória
-    nomeRecebedor: "NOME DO RECEBEDOR", // até 25 caracteres, sem acentos de preferência
-    cidade: "SAO PAULO", // até 15 caracteres
-    identificador: "VAQUINHA", // txid: só letras e números, até 25 caracteres
+    chave: "paulagalvaofortes@hotmail.com",
+    nomeRecebedor: "PAULA FERNANDA G A FORTES", // usado no QR Code (máx. 25 caracteres)
+    cidade: "BRASIL", // usado no QR Code (máx. 15 caracteres); pode trocar pela sua cidade
+    identificador: "VAQUINHA",
+  },
+  titular: "Paula Fernanda Galvão Andrade Fortes", // nome completo mostrado no site
+
+  // ---- Transferência bancária (opcional; apague o bloco para esconder) ----
+  banco: {
+    nome: "Banco do Brasil",
+    agencia: "44-2",
+    conta: "270169-3",
+    variacao: "51",
   },
 
   // ---- Meta e arrecadação ----
-  meta: 10000.0, // valor da meta em reais
+  meta: 280000.0, // valor da meta em reais
   // Atualize esta lista conforme os Pix forem chegando. O total é somado automaticamente.
-  doacoes: [
-    { nome: "Maria", valor: 50.0, data: "2026-10-10" },
-    { nome: "Anônimo", valor: 100.0, data: "2026-10-11" },
-    { nome: "João", valor: 25.5, data: "2026-10-12" },
-  ],
+  // Exemplo: { nome: "Ana", valor: 30.00, data: "2026-10-14" },
+  doacoes: [],
   // Se preferir informar só o total (sem lista), coloque um número aqui; ele substitui a soma.
   totalManual: null,
 

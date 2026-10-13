@@ -17,6 +17,7 @@ Edite **somente o arquivo `config.js`**:
 | `pix.chave` | Sua chave Pix (CPF, CNPJ, e-mail, telefone no formato `+5511999999999` ou chave aleatória) |
 | `pix.nomeRecebedor` | Nome do titular da conta (até 25 caracteres) |
 | `pix.cidade` | Cidade do titular (até 15 caracteres) |
+| `titular`, `banco` | Nome completo e dados bancários mostrados no site (apague `banco` para esconder) |
 | `meta` | Valor da meta em reais |
 | `doacoes` | Lista das contribuições recebidas — o total é somado sozinho |
 | `totalManual` | Use um número aqui se preferir informar só o total, sem lista |

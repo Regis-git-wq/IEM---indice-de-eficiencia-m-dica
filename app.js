@@ -24,7 +24,6 @@
   $("total").textContent = brl(total);
   $("meta").textContent = brl(cfg.meta);
   $("percentual").textContent = pct.toFixed(1).replace(".", ",") + "%";
-  $("qtd").textContent = doacoes.length;
   $("barra").setAttribute("aria-valuenow", Math.min(100, pct).toFixed(0));
   requestAnimationFrame(() => ($("preenchido").style.width = Math.min(100, pct) + "%"));
   if (cfg.atualizadoEm) $("atualizado").textContent = "Atualizado em " + dataBR(cfg.atualizadoEm);
@@ -50,7 +49,17 @@
 
   // ---- Pix ----
   $("chave").value = cfg.pix.chave;
-  $("recebedor").textContent = cfg.pix.nomeRecebedor;
+  $("recebedor").textContent = cfg.titular || cfg.pix.nomeRecebedor;
+
+  // ---- Transferência bancária ----
+  if (cfg.banco) {
+    $("secaoBanco").hidden = false;
+    $("bancoTitular").textContent = cfg.titular || cfg.pix.nomeRecebedor;
+    $("bancoNome").textContent = cfg.banco.nome;
+    $("bancoAgencia").textContent = cfg.banco.agencia;
+    $("bancoConta").textContent = cfg.banco.conta;
+    $("bancoVariacao").textContent = cfg.banco.variacao;
+  }
 
   function atualizarPix() {
     const payload = window.gerarPix({ ...cfg.pix, valor: $("valor").value });

@@ -28,7 +28,7 @@
       <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="barra">
         <div class="preenchido" id="preenchido"></div>
       </div>
-      <p class="info"><span id="percentual">0%</span> da meta · <span id="qtd">0</span> contribuições</p>
+      <p class="info"><span id="percentual">0%</span> da meta</p>
       <p class="atualizado" id="atualizado"></p>
     </section>
 
@@ -57,6 +57,17 @@
         <button id="btnChave">Copiar</button>
       </div>
       <p class="recebedor">Recebedor: <strong id="recebedor"></strong></p>
+    </section>
+
+    <section class="card" id="secaoBanco" hidden>
+      <h2>Ou por transferência bancária</h2>
+      <dl class="banco">
+        <dt>Titular</dt><dd id="bancoTitular"></dd>
+        <dt>Banco</dt><dd id="bancoNome"></dd>
+        <dt>Agência</dt><dd id="bancoAgencia"></dd>
+        <dt>Conta</dt><dd id="bancoConta"></dd>
+        <dt>Variação</dt><dd id="bancoVariacao"></dd>
+      </dl>
     </section>
 
     <section class="card" id="secaoDoadores" hidden>

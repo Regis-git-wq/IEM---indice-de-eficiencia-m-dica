@@ -28,7 +28,7 @@ body {
 .hero { text-align: center; margin-bottom: 20px; }
 .hero img { width: 100%; max-height: 320px; object-fit: cover; border-radius: 16px; margin-bottom: 16px; }
 .hero h1 { margin: 0 0 8px; font-size: 1.9rem; }
-.hero p { margin: 0; color: var(--suave); white-space: pre-line; }
+.hero p { margin: 0; color: var(--suave); white-space: pre-line; text-align: left; }
 .card {
   background: var(--card);
   border: 1px solid var(--borda);
@@ -87,3 +87,6 @@ footer { text-align: center; color: var(--suave); font-size: .9rem; margin-top: 
   position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
   background: var(--texto); color: var(--bg); padding: 10px 18px; border-radius: 99px; font-weight: 600;
 }
+.banco { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; }
+.banco dt { color: var(--suave); }
+.banco dd { margin: 0; font-weight: 600; }
