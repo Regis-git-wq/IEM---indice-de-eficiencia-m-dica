@@ -35,7 +35,7 @@ window.VAQUINHA = {
   // ---- Planilha do Google (opcional) ----
   // Link CSV da planilha publicada (Arquivo → Compartilhar → Publicar na Web → CSV).
   // Quando preenchido, o total, a lista e a data vêm da planilha e ignoram os campos abaixo.
-  planilhaCSV: "",
+  planilhaCSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkCJ8rQOLAdUUBfzwDqMZNOF-znnl6iG2Oz0nxjxrT8tDd5lozXA6r4Y3kvdD8uN7yZcCzEyu7wjPw/pub?output=csv",
 
   // ---- Meta e arrecadação ----
   meta: 280000.0, // valor da meta em reais
