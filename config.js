@@ -45,6 +45,6 @@ window.VAQUINHA = {
   // Se preferir informar só o total (sem lista), coloque um número aqui; ele substitui a soma.
   totalManual: null,
 
-  mostrarDoadores: true,
+  mostrarDoadores: false, // true mostra a lista "Quem já ajudou" com os nomes
   atualizadoEm: "2026-10-13",
 };

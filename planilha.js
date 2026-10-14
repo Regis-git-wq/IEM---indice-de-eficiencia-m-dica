@@ -1,5 +1,6 @@
 // Lê as doações de uma planilha do Google publicada como CSV.
 // Colunas esperadas: Data | Nome | Valor (o cabeçalho pode estar em qualquer linha/coluna)
+// e, opcionalmente, "Total a ser arrecadado" com a meta na linha abaixo.
 (function () {
   function lerCSV(texto) {
     const linhas = [];
@@ -50,7 +51,10 @@
     if (iCab < 0) throw new Error('Coluna "Valor" não encontrada na planilha');
     const cab = linhas[iCab].map(norm);
     const iData = cab.indexOf("data"), iNome = cab.indexOf("nome"), iValor = cab.indexOf("valor");
-    return linhas
+    // Meta opcional: coluna "Total a ser arrecadado" (ou "Meta"), valor na linha logo abaixo
+    const iMeta = cab.findIndex((c) => c === "meta" || c.startsWith("total a ser arrecadado"));
+    const meta = iMeta >= 0 ? lerValor((linhas[iCab + 1] || [])[iMeta]) : 0;
+    const doacoes = linhas
       .slice(iCab + 1)
       .map((l) => ({
         data: iData >= 0 ? lerData(l[iData]) : "",
@@ -58,5 +62,6 @@
         valor: lerValor(l[iValor]),
       }))
       .filter((d) => d.valor > 0);
+    return { doacoes, meta };
   };
 })();

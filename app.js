@@ -14,11 +14,10 @@
   }
 
   // ---- Progresso e doadores ----
-  function mostrarArrecadacao(doacoes, total, atualizadoEm) {
-    const pct = cfg.meta > 0 ? (total / cfg.meta) * 100 : 0;
-    $("total").textContent = brl(total);
-    $("meta").textContent = brl(cfg.meta);
-    $("percentual").textContent = pct.toFixed(1).replace(".", ",") + "%";
+  function mostrarArrecadacao(doacoes, total, atualizadoEm, meta = cfg.meta) {
+    const pct = meta > 0 ? (total / meta) * 100 : 0;
+    $("meta").textContent = brl(meta);
+    $("percentual").textContent = pct.toFixed(pct > 0 && pct < 1 ? 2 : 1).replace(".", ",") + "%";
     $("barra").setAttribute("aria-valuenow", Math.min(100, pct).toFixed(0));
     requestAnimationFrame(() => ($("preenchido").style.width = Math.min(100, pct) + "%"));
     $("atualizado").textContent = atualizadoEm ? "Atualizado em " + dataBR(atualizadoEm) : "";
@@ -55,10 +54,10 @@
   if (cfg.planilhaCSV) {
     window
       .carregarPlanilha(cfg.planilhaCSV)
-      .then((doacoes) => {
+      .then(({ doacoes, meta }) => {
         const total = doacoes.reduce((soma, d) => soma + d.valor, 0);
         const ultima = doacoes.map((d) => d.data).filter(Boolean).sort().pop();
-        mostrarArrecadacao(doacoes, total, ultima || cfg.atualizadoEm);
+        mostrarArrecadacao(doacoes, total, ultima || cfg.atualizadoEm, meta || cfg.meta);
       })
       .catch((erro) => console.warn("Não foi possível ler a planilha:", erro));
   }

@@ -43,10 +43,9 @@ h2 { margin: 0 0 16px; font-size: 1.2rem; }
 .valores .direita strong { font-size: 1.1rem; color: var(--suave); }
 .rotulo { color: var(--suave); font-size: .85rem; margin: 12px 0 4px; display: block; }
 .valores .rotulo { margin-top: 0; }
-#total { color: var(--primaria); }
+#percentual { color: var(--primaria); }
 .barra { height: 14px; background: var(--borda); border-radius: 99px; overflow: hidden; margin: 14px 0 8px; }
 .preenchido { height: 100%; width: 0; background: var(--primaria); border-radius: 99px; transition: width 1.2s ease; }
-.info { margin: 0; font-weight: 600; }
 .atualizado { margin: 4px 0 0; font-size: .8rem; color: var(--suave); }
 .valores-rapidos { display: flex; flex-wrap: wrap; gap: 8px; }
 button {
