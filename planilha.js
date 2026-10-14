@@ -1,5 +1,5 @@
 // Lê as doações de uma planilha do Google publicada como CSV.
-// Colunas esperadas (1ª linha = cabeçalho): Data | Nome | Valor
+// Colunas esperadas: Data | Nome | Valor (o cabeçalho pode estar em qualquer linha/coluna)
 (function () {
   function lerCSV(texto) {
     const linhas = [];
@@ -44,11 +44,19 @@
     const resp = await fetch(url, { cache: "no-store" });
     if (!resp.ok) throw new Error("Planilha indisponível (" + resp.status + ")");
     const linhas = lerCSV(await resp.text());
-    const cab = (linhas.shift() || []).map((c) => c.trim().toLowerCase());
-    const col = (nome, padrao) => (cab.indexOf(nome) >= 0 ? cab.indexOf(nome) : padrao);
-    const iData = col("data", 0), iNome = col("nome", 1), iValor = col("valor", 2);
+    // O cabeçalho pode estar em qualquer linha/coluna: procura a linha que tem "Valor"
+    const norm = (c) => String(c || "").trim().toLowerCase();
+    const iCab = linhas.findIndex((l) => l.some((c) => norm(c) === "valor"));
+    if (iCab < 0) throw new Error('Coluna "Valor" não encontrada na planilha');
+    const cab = linhas[iCab].map(norm);
+    const iData = cab.indexOf("data"), iNome = cab.indexOf("nome"), iValor = cab.indexOf("valor");
     return linhas
-      .map((l) => ({ data: lerData(l[iData]), nome: (l[iNome] || "").trim(), valor: lerValor(l[iValor]) }))
+      .slice(iCab + 1)
+      .map((l) => ({
+        data: iData >= 0 ? lerData(l[iData]) : "",
+        nome: iNome >= 0 ? (l[iNome] || "").trim() : "",
+        valor: lerValor(l[iValor]),
+      }))
       .filter((d) => d.valor > 0);
   };
 })();
