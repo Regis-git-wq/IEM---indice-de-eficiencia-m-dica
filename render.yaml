@@ -1,0 +1,21 @@
+# Blueprint do Render: New + > Blueprint > escolha este repositório.
+# Disco persistente exige um plano pago (Starter ou superior).
+services:
+  - type: web
+    name: resumi
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    disk:
+      name: resumi-data
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: DATA_DIR
+        value: /data
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SMTP_URL
+        sync: false
+      - key: MAIL_FROM
+        sync: false

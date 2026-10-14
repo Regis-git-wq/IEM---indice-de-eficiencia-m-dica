@@ -21,6 +21,12 @@ Gerar resumos exige estar logado, para que só usuários do app usem a chave da 
 
 No servidor, contas, sessões e metadados ficam em SQLite (`data/resumi.db`) e os arquivos em `data/blobs/<usuário>/`. Senhas são guardadas com hash scrypt; a sessão é um cookie `httpOnly` válido por 30 dias.
 
+### Segurança da conta
+
+- **Esqueci minha senha:** o app envia um link por e-mail, válido por 1 hora e de uso único. Ao trocar a senha, todos os aparelhos são desconectados.
+- **Limite de tentativas:** 10 erros de senha por e-mail a cada 15 min (e 50 por IP); pedidos de recuperação e cadastros também têm limite.
+- A tela de recuperação não revela se um e-mail tem conta.
+
 ## Como rodar
 
 Requisitos: Node.js 22.9+ e uma chave da API da Anthropic.
@@ -33,13 +39,56 @@ npm run dev
 
 Abra http://localhost:5173.
 
-Para produção: `npm run build && npm start` (serve o app e a API na porta `PORT`, padrão 3001). Os dados ficam em `DATA_DIR` (padrão `./data`) — use um disco persistente e faça backup dessa pasta.
+Em desenvolvimento, sem `SMTP_URL`, o link de "Esqueci minha senha" aparece no terminal.
 
-### Usar no celular
+Para testar no celular na mesma rede Wi-Fi, rode `npm run dev -- --host` e acesse pelo IP do computador — tudo funciona, exceto a gravação pelo microfone (navegadores só liberam o microfone em HTTPS ou `localhost`).
 
-Para o celular acessar, o servidor precisa estar publicado na internet **com HTTPS** (ex.: Railway, Render, Fly.io ou uma VPS com disco persistente). Navegadores só liberam o microfone em páginas HTTPS (ou `localhost`), então sem HTTPS a gravação de aulas não funciona no celular.
+## Publicar na internet
 
-Para testar na mesma rede Wi-Fi, rode `npm run dev -- --host` e acesse pelo IP do computador — tudo funciona, exceto a gravação pelo microfone.
+Para usar no celular de qualquer lugar, publique o app em um serviço com **HTTPS** e **disco persistente** (é onde ficam o banco e os arquivos). O repositório já tem um `Dockerfile` pronto e configurações para Render e Railway.
+
+### Variáveis de ambiente
+
+| Variável | Obrigatória | Para quê |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | sim | Gerar os resumos ([console.anthropic.com](https://console.anthropic.com)) |
+| `DATA_DIR` | sim (já vem como `/data`) | Pasta do disco persistente |
+| `SMTP_URL` | recomendada | Enviar o e-mail de "Esqueci minha senha" |
+| `MAIL_FROM` | recomendada | Remetente dos e-mails, ex.: `Resumi <nao-responda@seudominio.com>` |
+| `APP_URL` | só fora do Render/Railway | Endereço público usado no link do e-mail |
+
+**E-mail (`SMTP_URL`)** — o jeito mais simples para começar é o Gmail: ative a verificação em duas etapas, crie uma [senha de app](https://myaccount.google.com/apppasswords) e use `smtps://seuemail@gmail.com:SENHA_DE_APP@smtp.gmail.com:465` (com `MAIL_FROM` igual ao seu Gmail). Para volume maior, use um serviço como Resend, Brevo ou Mailgun, que também fornecem um endereço SMTP.
+
+### Opção 1 — Render
+
+1. Crie uma conta em [render.com](https://render.com) e conecte o GitHub.
+2. **New + → Blueprint** e escolha este repositório (ele lê o `render.yaml`: serviço Docker, plano Starter e disco de 5 GB em `/data`).
+3. Preencha `ANTHROPIC_API_KEY`, `SMTP_URL` e `MAIL_FROM` quando pedir.
+4. Ao terminar, o app fica em `https://resumi-xxxx.onrender.com`. O plano gratuito não tem disco persistente, por isso o blueprint usa o Starter.
+
+### Opção 2 — Railway
+
+1. Crie uma conta em [railway.com](https://railway.com) → **New Project → Deploy from GitHub repo** e escolha este repositório (ele usa o `Dockerfile` via `railway.json`).
+2. No serviço, **Settings → Volumes → Add Volume** com mount path `/data`.
+3. Em **Variables**, adicione `ANTHROPIC_API_KEY`, `SMTP_URL` e `MAIL_FROM`.
+4. Em **Settings → Networking → Generate Domain** para ter o endereço `https://….up.railway.app`.
+
+### Opção 3 — Qualquer servidor com Docker
+
+```bash
+docker build -t resumi .
+docker run -d --name resumi -p 3001:3001 -v resumi-data:/data \
+  -e ANTHROPIC_API_KEY=... -e SMTP_URL=... -e MAIL_FROM=... \
+  -e APP_URL=https://resumi.seudominio.com resumi
+```
+
+Coloque um proxy com HTTPS na frente (Caddy, Nginx + Let's Encrypt, Cloudflare Tunnel).
+
+### Backup
+
+Tudo fica no disco montado em `/data` (`resumi.db` + pasta `blobs/`). Faça cópias periódicas — no Render e no Railway há snapshots do disco/volume nas configurações.
+
+> O app roda como **uma única instância** (SQLite e o limite de tentativas ficam no próprio servidor). Isso aguenta tranquilamente uma turma ou uma faculdade inteira; para escalar além disso, seria preciso migrar para Postgres e armazenamento de arquivos como S3.
 
 ## Estrutura
 
@@ -47,7 +96,9 @@ Para testar na mesma rede Wi-Fi, rode `npm run dev -- --host` e acesse pelo IP d
 server/
   index.ts       Monta as rotas e, em produção, serve o build
   db.ts          SQLite: usuários, sessões, registros sincronizados, arquivos
-  auth.ts        Cadastro, login, logout e sessão por cookie
+  auth.ts        Cadastro, login, logout, recuperação de senha e limite de tentativas
+  mail.ts        Envio de e-mails (SMTP)
+  rateLimit.ts   Limitador de tentativas em memória
   sync.ts        /api/sync/push, /api/sync/pull e upload/download de arquivos
   summarize.ts   Monta a requisição ao Claude (PDF, imagem ou texto) e os estilos de resumo
 src/
@@ -64,10 +115,8 @@ src/
 - Resumos aceitam PDF, imagens (PNG/JPG/WEBP/GIF) e texto. Arquivos `.docx`/`.pptx` podem ser anexados e baixados, mas precisam ser exportados para PDF antes de resumir.
 - Requisições de resumo têm limite de ~32 MB por envio (limite da API).
 - Sem conta, os dados ficam só no aparelho; limpar os dados do site apaga tudo.
-- Ainda não há recuperação de senha por e-mail nem limite de tentativas de login.
 
 Ideias para as próximas versões:
 - Transcrição automática dos áudios e resumo a partir da transcrição.
-- Recuperação de senha por e-mail e limite de tentativas de login.
 - Instalar como app (PWA) e uso offline.
 - Marcadores de tempo nas gravações e chat de dúvidas sobre o material.

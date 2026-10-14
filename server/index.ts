@@ -8,6 +8,7 @@ import { syncRouter } from "./sync.js";
 
 const app = express();
 app.set("trust proxy", 1);
+app.get("/api/health", (_req, res) => void res.json({ ok: true }));
 app.use("/api", loadUser);
 app.use("/api/auth", express.json(), authRouter);
 app.use("/api", requireUser, syncRouter);
