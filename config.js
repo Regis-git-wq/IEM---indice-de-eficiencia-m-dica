@@ -32,6 +32,11 @@ window.VAQUINHA = {
     variacao: "51",
   },
 
+  // ---- Planilha do Google (opcional) ----
+  // Link CSV da planilha publicada (Arquivo → Compartilhar → Publicar na Web → CSV).
+  // Quando preenchido, o total, a lista e a data vêm da planilha e ignoram os campos abaixo.
+  planilhaCSV: "",
+
   // ---- Meta e arrecadação ----
   meta: 280000.0, // valor da meta em reais
   // Atualize esta lista conforme os Pix forem chegando. O total é somado automaticamente.

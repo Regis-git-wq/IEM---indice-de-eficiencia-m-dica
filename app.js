@@ -13,24 +13,19 @@
     $("imagem").hidden = false;
   }
 
-  // ---- Progresso ----
-  const doacoes = cfg.doacoes || [];
-  const total =
-    typeof cfg.totalManual === "number"
-      ? cfg.totalManual
-      : doacoes.reduce((soma, d) => soma + Number(d.valor || 0), 0);
-  const pct = cfg.meta > 0 ? (total / cfg.meta) * 100 : 0;
+  // ---- Progresso e doadores ----
+  function mostrarArrecadacao(doacoes, total, atualizadoEm) {
+    const pct = cfg.meta > 0 ? (total / cfg.meta) * 100 : 0;
+    $("total").textContent = brl(total);
+    $("meta").textContent = brl(cfg.meta);
+    $("percentual").textContent = pct.toFixed(1).replace(".", ",") + "%";
+    $("barra").setAttribute("aria-valuenow", Math.min(100, pct).toFixed(0));
+    requestAnimationFrame(() => ($("preenchido").style.width = Math.min(100, pct) + "%"));
+    $("atualizado").textContent = atualizadoEm ? "Atualizado em " + dataBR(atualizadoEm) : "";
 
-  $("total").textContent = brl(total);
-  $("meta").textContent = brl(cfg.meta);
-  $("percentual").textContent = pct.toFixed(1).replace(".", ",") + "%";
-  $("barra").setAttribute("aria-valuenow", Math.min(100, pct).toFixed(0));
-  requestAnimationFrame(() => ($("preenchido").style.width = Math.min(100, pct) + "%"));
-  if (cfg.atualizadoEm) $("atualizado").textContent = "Atualizado em " + dataBR(cfg.atualizadoEm);
-
-  // ---- Doadores ----
-  if (cfg.mostrarDoadores && doacoes.length) {
-    $("secaoDoadores").hidden = false;
+    $("doadores").textContent = "";
+    $("secaoDoadores").hidden = !(cfg.mostrarDoadores && doacoes.length);
+    if ($("secaoDoadores").hidden) return;
     doacoes
       .slice()
       .sort((a, b) => String(b.data).localeCompare(String(a.data)))
@@ -45,6 +40,27 @@
         li.append(nome, data, valor);
         $("doadores").appendChild(li);
       });
+  }
+
+  const doacoesConfig = cfg.doacoes || [];
+  mostrarArrecadacao(
+    doacoesConfig,
+    typeof cfg.totalManual === "number"
+      ? cfg.totalManual
+      : doacoesConfig.reduce((soma, d) => soma + Number(d.valor || 0), 0),
+    cfg.atualizadoEm
+  );
+
+  // Se houver planilha configurada, ela substitui os valores do config.js
+  if (cfg.planilhaCSV) {
+    window
+      .carregarPlanilha(cfg.planilhaCSV)
+      .then((doacoes) => {
+        const total = doacoes.reduce((soma, d) => soma + d.valor, 0);
+        const ultima = doacoes.map((d) => d.data).filter(Boolean).sort().pop();
+        mostrarArrecadacao(doacoes, total, ultima || cfg.atualizadoEm);
+      })
+      .catch((erro) => console.warn("Não foi possível ler a planilha:", erro));
   }
 
   // ---- Pix ----

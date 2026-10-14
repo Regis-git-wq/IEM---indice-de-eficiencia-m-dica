@@ -35,6 +35,15 @@ no ícone de lápis), adicione uma linha em `doacoes` e salve:
 
 O site soma tudo e atualiza a barra de progresso.
 
+## Atualizar pelo Google Planilhas (opcional)
+
+1. Crie uma planilha com as colunas **Data | Nome | Valor** na primeira linha.
+2. Em **Arquivo → Compartilhar → Publicar na Web**, escolha a aba e o formato **CSV** e publique.
+3. Cole o link gerado em `planilhaCSV` no `config.js`.
+
+A partir daí o site soma a coluna Valor, mostra a lista e usa a data mais recente
+como "Atualizado em". O Google pode levar alguns minutos para refletir as edições.
+
 ## Como publicar (GitHub Pages, grátis)
 
 1. No GitHub, vá em **Settings → Pages**.
