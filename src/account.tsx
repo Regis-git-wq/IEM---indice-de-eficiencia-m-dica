@@ -15,6 +15,8 @@ interface AccountContextValue {
   login(email: string, password: string): Promise<void>;
   register(name: string, email: string, password: string): Promise<void>;
   logout(): Promise<void>;
+  requestPasswordReset(email: string): Promise<void>;
+  resetPassword(token: string, password: string): Promise<void>;
 }
 
 const AccountContext = createContext<AccountContextValue | null>(null);
@@ -25,15 +27,15 @@ export function useAccount() {
   return ctx;
 }
 
-async function postAuth(path: string, body: unknown): Promise<User> {
+async function postAuth<T = { user: User }>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`/api/auth/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
-  const data = (await res.json().catch(() => ({}))) as { user?: User; error?: string };
-  if (!res.ok || !data.user) throw new Error(data.error ?? "Não foi possível conectar ao servidor.");
-  return data.user;
+  }).catch(() => null);
+  const data = (await res?.json().catch(() => ({}))) as T & { error?: string };
+  if (!res?.ok) throw new Error(data?.error ?? "Não foi possível conectar ao servidor.");
+  return data;
 }
 
 const SYNC_INTERVAL_MS = 30_000;
@@ -83,8 +85,10 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const value: AccountContextValue = {
     user,
     ready,
-    login: async (email, password) => setUser(await postAuth("login", { email, password })),
-    register: async (name, email, password) => setUser(await postAuth("register", { name, email, password })),
+    login: async (email, password) => setUser((await postAuth("login", { email, password })).user),
+    register: async (name, email, password) => setUser((await postAuth("register", { name, email, password })).user),
+    requestPasswordReset: async (email) => void (await postAuth<{ ok: true }>("forgot", { email })),
+    resetPassword: async (token, password) => setUser((await postAuth("reset", { token, password })).user),
     logout: async () => {
       await syncNow().catch(() => {});
       const pending = (await listDirty()).length;

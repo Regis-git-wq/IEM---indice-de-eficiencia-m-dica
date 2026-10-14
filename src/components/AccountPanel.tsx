@@ -25,9 +25,23 @@ function SyncLine() {
   );
 }
 
+/** Token do link "redefinir senha" recebido por e-mail (…/?reset=TOKEN). */
+function takeResetTokenFromUrl() {
+  const url = new URL(window.location.href);
+  const token = url.searchParams.get("reset");
+  if (token) {
+    // Tira o token da barra de endereço para não ficar no histórico.
+    url.searchParams.delete("reset");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }
+  return token;
+}
+const initialResetToken = takeResetTokenFromUrl();
+
 export function AccountPanel() {
   const { user, ready, logout } = useAccount();
-  const [open, setOpen] = useState(false);
+  const resetToken = initialResetToken;
+  const [dialog, setDialog] = useState<Mode | null>(resetToken ? "reset" : null);
 
   if (!ready) return null;
 
@@ -37,6 +51,9 @@ export function AccountPanel() {
         <div className="account-name">{user.name}</div>
         <div className="muted small">{user.email}</div>
         <SyncLine />
+        {dialog === "reset" && (
+          <p className="error small">Saia da conta neste aparelho para usar o link de redefinição de senha.</p>
+        )}
         <button className="link danger" onClick={() => void logout()}>
           Sair
         </button>
@@ -49,22 +66,47 @@ export function AccountPanel() {
       <p className="muted small">
         Seus dados estão só neste aparelho. Entre para acessá-los também no celular ou no computador.
       </p>
-      <button className="primary full" onClick={() => setOpen(true)}>
+      <button className="primary full" onClick={() => setDialog("login")}>
         Entrar / Criar conta
       </button>
-      {open && <AuthDialog onClose={() => setOpen(false)} />}
+      {dialog && <AuthDialog initialMode={dialog} resetToken={resetToken} onClose={() => setDialog(null)} />}
     </div>
   );
 }
 
-function AuthDialog({ onClose }: { onClose: () => void }) {
-  const { login, register } = useAccount();
-  const [mode, setMode] = useState<"login" | "register">("login");
+type Mode = "login" | "register" | "forgot" | "reset";
+
+const TITLES: Record<Mode, string> = {
+  login: "Entrar",
+  register: "Criar conta",
+  forgot: "Esqueci minha senha",
+  reset: "Criar nova senha",
+};
+
+function AuthDialog({
+  initialMode,
+  resetToken,
+  onClose,
+}: {
+  initialMode: Mode;
+  resetToken: string | null;
+  onClose: () => void;
+}) {
+  const { login, register, requestPasswordReset, resetPassword } = useAccount();
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const switchTo = (m: Mode) => {
+    setMode(m);
+    setError(null);
+    setInfo(null);
+    setPassword("");
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +114,13 @@ function AuthDialog({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       if (mode === "login") await login(email, password);
-      else await register(name, email, password);
+      else if (mode === "register") await register(name, email, password);
+      else if (mode === "reset") await resetPassword(resetToken ?? "", password);
+      else {
+        await requestPasswordReset(email);
+        setInfo("Se existir uma conta com este e-mail, enviamos um link para criar uma nova senha. Confira também o spam.");
+        return;
+      }
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -81,47 +129,66 @@ function AuthDialog({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const needsPassword = mode !== "forgot";
+  const newPassword = mode === "register" || mode === "reset";
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <form className="modal card" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <h3>{mode === "login" ? "Entrar" : "Criar conta"}</h3>
+        <h3>{TITLES[mode]}</h3>
         <p className="muted small">
-          O que você já salvou neste aparelho será enviado para a sua conta.
+          {mode === "forgot"
+            ? "Informe o e-mail da sua conta e enviaremos um link para criar uma nova senha."
+            : mode === "reset"
+              ? "Escolha uma nova senha. Por segurança, os outros aparelhos serão desconectados."
+              : "O que você já salvou neste aparelho será enviado para a sua conta."}
         </p>
         {mode === "register" && (
           <input placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />
         )}
-        <input
-          type="email"
-          placeholder="E-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-          required
-        />
-        <input
-          type="password"
-          placeholder={mode === "register" ? "Senha (mín. 8 caracteres)" : "Senha"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete={mode === "login" ? "current-password" : "new-password"}
-          minLength={mode === "register" ? 8 : undefined}
-          required
-        />
+        {mode !== "reset" && (
+          <input
+            type="email"
+            placeholder="E-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
+        )}
+        {needsPassword && (
+          <input
+            type="password"
+            placeholder={newPassword ? "Nova senha (mín. 8 caracteres)" : "Senha"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete={newPassword ? "new-password" : "current-password"}
+            minLength={newPassword ? 8 : undefined}
+            required
+          />
+        )}
         {error && <p className="error">{error}</p>}
-        <button className="primary" type="submit" disabled={busy}>
-          {busy ? "Aguarde…" : mode === "login" ? "Entrar" : "Criar conta"}
-        </button>
-        <button
-          type="button"
-          className="link"
-          onClick={() => {
-            setMode(mode === "login" ? "register" : "login");
-            setError(null);
-          }}
-        >
-          {mode === "login" ? "Não tem conta? Criar uma" : "Já tenho conta"}
-        </button>
+        {info && <p className="info">{info}</p>}
+        {!info && (
+          <button className="primary" type="submit" disabled={busy}>
+            {busy ? "Aguarde…" : mode === "forgot" ? "Enviar link" : mode === "reset" ? "Salvar nova senha" : TITLES[mode]}
+          </button>
+        )}
+        {mode === "login" && (
+          <>
+            <button type="button" className="link" onClick={() => switchTo("forgot")}>
+              Esqueci minha senha
+            </button>
+            <button type="button" className="link" onClick={() => switchTo("register")}>
+              Não tem conta? Criar uma
+            </button>
+          </>
+        )}
+        {mode !== "login" && (
+          <button type="button" className="link" onClick={() => switchTo("login")}>
+            {mode === "register" ? "Já tenho conta" : "Voltar para o login"}
+          </button>
+        )}
       </form>
     </div>
   );
